@@ -1,49 +1,18 @@
 import os
 import discord
-
-from opentelemetry import metrics
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.resources import Resource
+from otel import init_otel
 
 # -----------------------------
-# OpenTelemetry -> SigNoz Setup
+# OpenTelemetry Setup
 # -----------------------------
+meter, logger = init_otel()
 
-resource = Resource.create(
-    {
-        "service.name": "trakr"
-    }
-)
-
-exporter = OTLPMetricExporter(
-    endpoint="localhost:4317",
-    insecure=True,
-)
-
-reader = PeriodicExportingMetricReader(
-    exporter,
-    export_interval_millis=5000,
-)
-
-metrics.set_meter_provider(
-    MeterProvider(
-        resource=resource,
-        metric_readers=[reader],
-    )
-)
-
-meter = metrics.get_meter("trakr")
-
-# Day 1 metrics
-presence_counter = meter.create_counter("trakr.presence_changes")
+bot_online_gauge = meter.create_gauge("trakr.bot.online")
 message_counter = meter.create_counter("trakr.bot.messages")
 
 # -----------------------------
 # Discord Setup
 # -----------------------------
-
 intents = discord.Intents.default()
 intents.presences = True
 intents.members = True
@@ -51,57 +20,62 @@ intents.message_content = True
 
 client = discord.Client(intents=intents)
 
-
 @client.event
 async def on_ready():
-    print(
-        f"Connected as {client.user} — watching {len(client.guilds)} server(s)"
-    )
-
+    logger.info(f"Connected as {client.user} — watching {len(client.guilds)} server(s)")
+    print(f"Connected as {client.user} — watching {len(client.guilds)} server(s)")
 
 @client.event
 async def on_presence_update(before, after):
-    if not after.bot:
-        return
+    try:
+        if not after.bot:
+            return
 
-    if before.status == after.status:
-        return
+        if before.status == after.status:
+            return
 
-    presence_counter.add(
-        1,
-        {
+        is_online = 1 if str(after.status) != "offline" else 0
+        attrs = {
             "bot.name": after.name,
-            "new_status": str(after.status),
-        },
-    )
+            "bot.id": str(after.id),
+        }
+        
+        bot_online_gauge.set(is_online, attrs)
+        
+        log_msg = f"{after.name} went {after.status}"
+        logger.info(log_msg, extra=attrs)
+        print(f"[presence] {log_msg}")
 
-    print(f"[presence] {after.name} -> {after.status}")
-
+    except Exception as e:
+        logger.exception("Error in on_presence_update")
 
 @client.event
 async def on_message(message):
-    if not message.author.bot:
-        return
+    try:
+        if not message.author.bot:
+            return
 
-    if message.author.id == client.user.id:
-        return
+        if message.author.id == client.user.id:
+            return
 
-    message_counter.add(
-        1,
-        {
+        attrs = {
             "bot.name": message.author.name,
-        },
-    )
+            "bot.id": str(message.author.id),
+            "channel": str(message.channel),
+        }
+        
+        message_counter.add(1, attrs)
+        
+        log_msg = f"{message.author.name} posted in #{message.channel}"
+        logger.info(log_msg, extra=attrs)
+        print(f"[message] {log_msg}")
 
-    print(
-        f"[message] {message.author.name} posted in #{message.channel}"
-    )
-
+    except Exception as e:
+        logger.exception("Error in on_message")
 
 # -----------------------------
 # Start Bot
 # -----------------------------
-
 token = os.environ.get("DISCORD_BOT_TOKEN")
 
 if not token:
