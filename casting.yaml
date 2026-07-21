@@ -1,0 +1,10 @@
+apiVersion: v1alpha1
+metadata:
+  name: signoz
+spec:
+  deployment:
+    mode: docker
+    flavor: compose
+  mcp:
+    spec:
+      enabled: true

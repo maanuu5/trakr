@@ -1,0 +1,27 @@
+# Environments
+.env
+.venv/
+observer/.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDEs
+.vscode/
+.idea/
+
+# Foundry / Deployment
+foundry.tar.gz
+foundry_windows_amd64/
+pours/
+
+# Logs
+*.log
