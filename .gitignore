@@ -25,3 +25,6 @@ pours/
 
 # Logs
 *.log
+
+# Documentation
+SPEC.md
