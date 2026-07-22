@@ -37,7 +37,14 @@ def setup_audit_poll(client, meter, logger):
                         if action_type == "member_update":
                             if hasattr(entry.after, "timed_out_until") or hasattr(entry.after, "communication_disabled_until"):
                                 action_type = "timeout"
-                                
+                            elif hasattr(entry.after, "nick"):
+                                action_type = "nickname_change"
+                        elif action_type == "member_role_update":
+                            action_type = "role_update"
+                        elif action_type == "member_disconnect":
+                            action_type = "voice_disconnect"
+                        elif action_type == "member_move":
+                            action_type = "voice_move"
                         attrs = {
                             "bot.name": entry.user.name,
                             "bot.id": str(entry.user.id),
