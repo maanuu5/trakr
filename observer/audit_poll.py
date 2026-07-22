@@ -1,11 +1,18 @@
+import json
+import os
 import discord
 from discord.ext import tasks
 import store
 
+# Load configuration
+_config_path = os.path.join(os.path.dirname(__file__), "config.json")
+with open(_config_path) as f:
+    CONFIG = json.load(f)
+
 def setup_audit_poll(client, meter, logger):
     mod_actions_counter = meter.create_counter("trakr.bot.mod_actions")
 
-    @tasks.loop(minutes=2)
+    @tasks.loop(minutes=CONFIG["audit_poll_interval_minutes"])
     async def poll_audit_logs():
         for guild in client.guilds:
             try:

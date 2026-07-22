@@ -91,21 +91,53 @@ async def on_message(message):
 
 @client.event
 async def on_member_remove(member):
-    if not member.bot:
-        return
+    try:
+        if not member.bot:
+            return
+            
+        bot_id = str(member.id)
+        store.mark_offline(bot_id)
         
-    bot_id = str(member.id)
-    store.mark_offline(bot_id)
+        attrs = {
+            "bot.name": member.name,
+            "bot.id": bot_id,
+        }
+        bot_online_gauge.set(0, attrs)
+        
+        log_msg = f"{member.name} left the server (marked as offline)"
+        logger.info(log_msg, extra=attrs)
+        print(f"[presence] {log_msg}")
     
-    attrs = {
-        "bot.name": member.name,
-        "bot.id": bot_id,
-    }
-    bot_online_gauge.set(0, attrs)
+    except Exception as e:
+        logger.exception("Error in on_member_remove")
+
+@client.event
+async def on_member_join(member):
+    try:
+        if not member.bot:
+            return
+        
+        bot_id = str(member.id)
+        downtime = store.mark_online(bot_id)
+        
+        attrs = {
+            "bot.name": member.name,
+            "bot.id": bot_id,
+        }
+        bot_online_gauge.set(1, attrs)
+        
+        if downtime is not None:
+            downtime_histogram.record(downtime, attrs)
+            log_msg = f"{member.name} re-joined after {downtime:.1f}s absence"
+            logger.info(log_msg, extra=attrs)
+            print(f"[recovery] {log_msg}")
+        else:
+            log_msg = f"{member.name} joined the server"
+            logger.info(log_msg, extra=attrs)
+            print(f"[presence] {log_msg}")
     
-    log_msg = f"{member.name} left the server (marked as offline)"
-    logger.info(log_msg, extra=attrs)
-    print(f"[presence] {log_msg}")
+    except Exception as e:
+        logger.exception("Error in on_member_join")
 
 # -----------------------------
 # Background Tasks

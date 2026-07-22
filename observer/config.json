@@ -1,0 +1,4 @@
+{
+    "audit_poll_interval_minutes": 2,
+    "downtime_alert_threshold_minutes": 5
+}
