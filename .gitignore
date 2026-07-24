@@ -26,5 +26,8 @@ pours/
 # Logs
 *.log
 
+# Database
+*.db
+
 # Documentation
 SPEC.md
