@@ -19,6 +19,28 @@ Trakr uses a Python observer script that polls the Discord API for presence data
 - **Observability:** SigNoz
 - **Storage:** SQLite (local state management for audit logs)
 
+## How to Run
+
+1. **Start SigNoz:** Ensure Docker Desktop is running. In the project root, run:
+   ```bash
+   foundryctl cast -f casting.yaml
+   ```
+   *SigNoz UI will be available at `http://localhost:8080`.*
+
+2. **Configure the Bot:** Create a `.env` file inside the `observer/` directory and add your Discord bot token:
+   ```env
+   DISCORD_TOKEN=your_bot_token_here
+   ```
+
+3. **Start the Observer:**
+   ```bash
+   cd observer
+   pip install -r requirements.txt
+   python bot.py
+   ```
+
+4. **Import Dashboards:** Open SigNoz (`http://localhost:8080`), go to Dashboards → New Dashboard → Import JSON, and upload the four JSON files found in the `dashboards/` folder.
+
 ## Dashboards
 
 1. **Bot Uptime & Reliability:** Displays uptime percentages and crash events.
