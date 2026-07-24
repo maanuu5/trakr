@@ -26,7 +26,7 @@ If you are running this project from scratch, follow these step-by-step instruct
 ### 1. Prerequisites
 Before starting, you must have the following installed on your machine:
 - **Docker Desktop:** Required to run SigNoz locally. [Download and install it here.](https://www.docker.com/products/docker-desktop/) Make sure to allocate at least 4GB of RAM in Docker settings.
-- **Foundry:** The CLI tool used to deploy SigNoz. [Install it here.](https://github.com/WeMakeDevs/foundry)
+- **Foundry:** The CLI tool used to deploy SigNoz. [See official installation instructions here](https://signoz.io/docs/install/docker/). (Or run `curl -fsSL https://signoz.io/foundry.sh | bash` on macOS/Linux).
 - **Python:** Required to run the observer bot. [Download Python 3.10+ here.](https://www.python.org/downloads/)
 - **Git:** Required to clone this repository. [Download Git here.](https://git-scm.com/downloads)
 
