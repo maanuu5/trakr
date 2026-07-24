@@ -29,6 +29,8 @@ async def on_ready():
     print(f"Connected as {client.user} — watching {len(client.guilds)} server(s)")
     if not poll_task.is_running():
         poll_task.start()
+    if not emit_presence_metrics.is_running():
+        emit_presence_metrics.start()
 
 @client.event
 async def on_presence_update(before, after):
@@ -142,6 +144,24 @@ async def on_member_join(member):
 # -----------------------------
 # Background Tasks
 # -----------------------------
+from discord.ext import tasks
+
+@tasks.loop(minutes=1)
+async def emit_presence_metrics():
+    for guild in client.guilds:
+        for member in guild.members:
+            if member.bot:
+                is_online = 1 if str(member.status) != "offline" else 0
+                attrs = {
+                    "bot.name": member.name,
+                    "bot.id": str(member.id),
+                }
+                bot_online_gauge.set(is_online, attrs)
+
+@emit_presence_metrics.before_loop
+async def before_emit():
+    await client.wait_until_ready()
+
 poll_task = audit_poll.setup_audit_poll(client, meter, logger)
 
 # -----------------------------
