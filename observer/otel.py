@@ -5,8 +5,19 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    MeterProvider,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import Resource
 
 def init_otel():
@@ -18,6 +29,14 @@ def init_otel():
     metric_exporter = OTLPMetricExporter(
         endpoint="localhost:4317",
         insecure=True,
+        preferred_temporality={
+            Counter: AggregationTemporality.DELTA,
+            UpDownCounter: AggregationTemporality.DELTA,
+            Histogram: AggregationTemporality.DELTA,
+            ObservableCounter: AggregationTemporality.DELTA,
+            ObservableUpDownCounter: AggregationTemporality.DELTA,
+            ObservableGauge: AggregationTemporality.DELTA,
+        },
     )
     metric_reader = PeriodicExportingMetricReader(
         metric_exporter,
